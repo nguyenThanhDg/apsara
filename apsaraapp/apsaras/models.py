@@ -35,7 +35,8 @@ class Product(models.Model):
     price = models.IntegerField()
     description = RichTextField()
     category = models.ForeignKey(Category, null=True, on_delete=models.SET_NULL)
-    type = models.OneToOneField("Type", on_delete=models.CASCADE, primary_key=True)
+    type = models.ForeignKey("Type", null=True, on_delete=models.SET_NULL)
+    tags = models.ManyToManyField('Tag')
 
     def __str__(self):
         return self.name
@@ -93,6 +94,17 @@ class Order(models.Model):
     updated_date = models.DateTimeField(auto_now=True)
     price = models.IntegerField(null=True)
     quantity = models.IntegerField(null=True)
+
+
+class Tag(ModelBase):
+    name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
+class Rating(ActionBase):
+    rate = models.SmallIntegerField(default=0)
 
 
 

@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'ckeditor',
     'ckeditor_uploader',
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [
@@ -52,7 +53,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'apsaraapp.urls'
-CKEDITOR_UPLOAD_PATH = "images/"
+CKEDITOR_UPLOAD_PATH = "productupload/"
 STATIC_URL = '/static/'
 TEMPLATES = [
     {
@@ -119,7 +120,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
 STATIC_URL = 'static/'
-
+MEDIA_ROOT = '%s/apsaras/static/' % BASE_DIR
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
