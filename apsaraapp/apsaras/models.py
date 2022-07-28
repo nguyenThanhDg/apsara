@@ -1,9 +1,7 @@
-from urllib.request import AbstractBasicAuthHandler
 
 from ckeditor.fields import RichTextField
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.contrib.auth.models import AbstractBaseUser
 from rest_framework.serializers import ModelSerializer
 
 
@@ -34,7 +32,7 @@ class Product(models.Model):
     name = models.CharField(max_length=50, null=False)
     price = models.IntegerField()
     description = RichTextField()
-    category = models.ForeignKey(Category, null=True, on_delete=models.SET_NULL)
+    category = models.ForeignKey(Category,related_name='products', null=True, on_delete=models.SET_NULL)
     type = models.ForeignKey("Type", null=True, on_delete=models.SET_NULL)
     tags = models.ManyToManyField('Tag')
 
@@ -58,24 +56,14 @@ class Image(ModelBase):
         return self.name
 
 
-class Customer(AbstractBaseUser):
-    first_name = models.CharField(max_length=50)
-    last_name = models.CharField(max_length=50)
-    email = models.CharField(max_length=50)
-    phone = models.CharField(max_length=20)
-    username = models.CharField(max_length=50)
-    created_date = models.DateTimeField(auto_now_add=True)
-    active = models.BooleanField(default=True)
-
-
 class ActionBase(models.Model):
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ('customer','product')
+        unique_together = ('user','product')
         abstract = True
 
 
@@ -86,9 +74,12 @@ class Like(ActionBase):
 class Comment(ActionBase):
     content = models.TextField()
 
+    def __str__(self):
+        return self.content
+
 
 class Order(models.Model):
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
@@ -107,4 +98,9 @@ class Rating(ActionBase):
     rate = models.SmallIntegerField(default=0)
 
 
+class ProductView(models.Model):
+    created_date = models.DateTimeField(auto_now_add=True)
+    updated_date = models.DateTimeField(auto_now=True)
+    views = models.IntegerField(default=0)
+    product = models.OneToOneField(Product, on_delete=models.CASCADE)
 

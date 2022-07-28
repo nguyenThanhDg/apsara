@@ -14,7 +14,7 @@ class ProductForm(forms.ModelForm):
 
 class ProductAdmin(admin.ModelAdmin):
     form = ProductForm
-    list_display = ["id", "name", "price", "category","active", "type", "created_date"]
+    list_display = ["name", "id", "price", "category", "active", "type", "created_date"]
     search_filter = ["name", "price"]
     list_filter = ["name", "price"]
 
