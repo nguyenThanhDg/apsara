@@ -1,15 +1,17 @@
-from os import access
-
-from django.shortcuts import render
 from rest_framework import viewsets, generics, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Category, Product, Type, Image, Tag, Like, Comment, Rating, ProductView
+from rest_framework.views import APIView
+
+from .models import Category, Product, Type, Image, Tag, Like, Comment, Rating, ProductView, User, Order
 from .serializers import CategorySerializer, ProductSerializer, TypeSerializer, ImageSerializer, \
-    ProductDetailSerializer, TagSerializer, AuthProductDetailSerializer, CommentSerializer, ProductViewSerilizer
+    ProductDetailSerializer, TagSerializer, AuthProductDetailSerializer, CommentSerializer, ProductViewSerializer, \
+    UserSerializer, OrderSerializer
 from .paginator import BasePagination
 from django.http import Http404
 from django.db.models import F
+
+from django.conf import settings
 
 
 class CategoryViewSet(viewsets.ViewSet, generics.ListAPIView):
@@ -47,7 +49,7 @@ class ProductDetailViewSet(viewsets.ViewSet, generics.RetrieveAPIView):
             return AuthProductDetailSerializer
 
     def get_permissions(self):
-        if self.action in ['like', 'rating']:
+        if self.action in ['like', 'rating', 'add_comment']:
             return [permissions.IsAuthenticated()]
 
         return [permissions.AllowAny()]
@@ -110,20 +112,28 @@ class ProductDetailViewSet(viewsets.ViewSet, generics.RetrieveAPIView):
         return Response(data=AuthProductDetailSerializer(product, context={'request': request}).data,
                         status=status.HTTP_200_OK)
 
-    @action(methods=['post'], detail=True, url_path='comment')
-    def add_comment(self,request, pk):
-        content = request.get('content')
+    @action(methods=['post'], detail=True, url_path='add-comment')
+    def add_comment(self, request, pk):
+        content = request.data.get('content')
         if content:
-            c = Comment(content=content, product=self.get_object(), creator=request.customer)
-            return Response(CommentSerializer(c).data, status=status.HTTP_201_CREATED)
+            c = Comment.objects.create(content=content, product=self.get_object(), user=request.user)
+            return Response(CommentSerializer(c, context={"request": request}).data,
+                            status=status.HTTP_201_CREATED)
+
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
     @action(methods=['get'], detail=True, url_path='views')
-    def inc_view(self, request,pk):
+    def inc_view(self, request, pk):
         v, created = ProductView.objects.get_or_create(product=self.get_object())
         v.views = F('views') + 1
         v.save()
 
-        return Response(ProductViewSerilizer(v).data, status=status.HTTP_200_OK)
+        return Response(ProductViewSerializer(v).data, status=status.HTTP_200_OK)
+
+    @action(methods=['get'], detail=True, url_path='images')
+    def get_images(self, request, pk):
+        images = self.get_object().images
+        return Response(data=ImageSerializer(images, many=True, context={'request': request}).data, status=status.HTTP_200_OK)
 
 
 class ProductViewSet(viewsets.ViewSet, generics.ListAPIView):
@@ -154,3 +164,52 @@ class ImageViewSet(viewsets.ViewSet, generics.ListAPIView):
 class TagViewSet(viewsets.ViewSet, generics.ListAPIView):
     queryset = Tag.objects.filter(active=True)
     serializer_class = TagSerializer
+
+
+class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
+    queryset = User.objects.filter(is_active=True)
+    serializer_class = UserSerializer
+
+    def get_permissions(self):
+        if self.action == 'current_user':
+            return [permissions.IsAuthenticated()]
+
+        return [permissions.AllowAny()]
+
+    @action(methods=['get'], url_path="current-user", detail=False)
+    def current_user(self, request):
+        return Response(self.serializer_class(request.user, context={'request': request}).data,
+                        status=status.HTTP_200_OK)
+
+
+class AuthInfo(APIView):
+    def get(self, request):
+        return Response(settings.OAUTH2_INFOR, status=status.HTTP_200_OK)
+
+
+class CommentViewSet(viewsets.ViewSet, generics.DestroyAPIView,
+                     generics.UpdateAPIView):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def destroy(self, request, *args, **kwargs):
+        if request.user == self.get_object().user:
+            return super().destroy(request, *args, **kwargs)
+
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
+    def partial_update(self, request, *args, **kwargs):
+        if request.user == self.get_object().user:
+            return super().partial_update(request, *args, **kwargs)
+
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
+
+class OrderViewSet(viewsets.ViewSet, generics.RetrieveAPIView, generics.CreateAPIView):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
+
+    def post(self, request, *args, **kwargs):
+        if request.user == self.get_object().user:
+            return super().post(request, *args, **kwargs)

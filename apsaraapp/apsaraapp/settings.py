@@ -40,7 +40,18 @@ INSTALLED_APPS = [
     'ckeditor',
     'ckeditor_uploader',
     'drf_yasg',
+    'oauth2_provider',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
+    )
+}
+#
+# OAUTH2_PROVIDER = {
+#     'OAUTH2_BACKEND_CLASS': 'oauth2_provider.oauth2_backends.JSONOAuthLibCore',
+# }
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -52,8 +63,14 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+OAUTH2_INFOR = {
+    "client_id" : "PAFvRTza9lzHoqqxewphyjPyTrucm9iYhEFz8UvX",
+    "client_secret" : "ypHXnncMclzA4hWy00vNmxjPIBrkknBC5RLxPoKxnElzqhnmYtxLXh5LjoRNjmCCIE2zyT4eHoOW3JRryNTV7ynxvu7nH9oRKaZOCXXIZaucGcbcau0dr2r4rmT20iIP"
+}
+
+
 ROOT_URLCONF = 'apsaraapp.urls'
-CKEDITOR_UPLOAD_PATH = "productupload/"
+CKEDITOR_UPLOAD_PATH = "static/productupload/"
 STATIC_URL = '/static/'
 TEMPLATES = [
     {

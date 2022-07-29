@@ -50,7 +50,7 @@ class Type(ModelBase):
 class Image(ModelBase):
     name = models.CharField(max_length=50, null=False)
     link = models.ImageField(null=True, upload_to='products/%Y/%m')
-    product = models.ForeignKey(Product, null=True, on_delete=models.SET_NULL)
+    product = models.ForeignKey(Product,related_name='images', null=True, on_delete=models.SET_NULL)
 
     def __str__(self):
         return self.name
@@ -63,7 +63,6 @@ class ActionBase(models.Model):
     updated_date = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ('user','product')
         abstract = True
 
 
@@ -83,8 +82,9 @@ class Order(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
-    price = models.IntegerField(null=True)
+    unit_price = models.IntegerField(null=True)
     quantity = models.IntegerField(null=True)
+    discount = models.FloatField(default=0)
 
 
 class Tag(ModelBase):

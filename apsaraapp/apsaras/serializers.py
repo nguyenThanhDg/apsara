@@ -1,7 +1,7 @@
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 
-from .models import Category, Product, Type, Image, Tag, Comment, User, Rating, ProductView
+from .models import Category, Product, Type, Image, Tag, Comment, User, Rating, ProductView, Like, Order
 
 
 class CategorySerializer(ModelSerializer):
@@ -13,7 +13,7 @@ class CategorySerializer(ModelSerializer):
 class ProductSerializer(ModelSerializer):
     class Meta:
         model = Product
-        fields = ["id", "name", "price", "category", "type", "created_date"]
+        fields = ["active", "id", "name", "price", "category", "type", "created_date", 'images']
 
 
 class TypeSerializer(ModelSerializer):
@@ -33,7 +33,7 @@ class ImageSerializer(ModelSerializer):
 
     class Meta:
         model = Image
-        fields = ['id', 'name', 'created_date', 'link', 'product_id']
+        fields = ['id', 'name', 'created_date', 'link', 'product']
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -92,7 +92,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        exclude = ['active']
+        fields = ['content', 'user', 'product']
 
 
 class AuthProductDetailSerializer(ProductDetailSerializer):
@@ -124,11 +124,17 @@ class RatingSerializer(serializers.ModelSerializer):
 
 class LikeSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Rating
+        model = Like
         fields = ['id', 'active', 'created_date']
 
 
-class ProductViewSerilizer(ModelSerializer):
+class ProductViewSerializer(ModelSerializer):
     class Meta:
         model = ProductView
         fields = ['id', 'views', 'product']
+
+
+class OrderSerializer(ModelSerializer):
+    class Meta:
+        model = Order
+        fields = ['id', 'created_date', 'unit_price', 'quantity', 'discount', 'user', 'product']

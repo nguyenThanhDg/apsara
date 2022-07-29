@@ -30,4 +30,5 @@ urlpatterns = [
         schema_view.with_ui('redoc', cache_timeout=0),
         name='schema-redoc'),
     re_path(r'^ckeditor/', include('ckeditor_uploader.urls')),
+    path('o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
 ]
